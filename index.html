@@ -13,9 +13,9 @@
   --muted:#6b7280;
   --line:#e5e7eb;
   --line-strong:#d1d5db;
-  --brand:#4f46e5;
-  --brand-dark:#1e1b4b;
-  --brand-soft:#eef2ff;
+  --brand:#2563eb;
+  --brand-dark:#0f172a;
+  --brand-soft:#eff6ff;
   --hero-1:#232636;
   --hero-2:#2b3145;
   --hero-3:#3b4260;
@@ -62,7 +62,7 @@ nav{
   color:#fff;
   padding:6px 10px;
   border-radius:999px;
-  background:linear-gradient(135deg,#334155,var(--brand));
+  background:linear-gradient(135deg,#0f172a,#2563eb);
   box-shadow:var(--shadow-sm);
 }
 .hero{
@@ -71,7 +71,7 @@ nav{
   padding:48px 28px 38px;
   color:#fff;
   background:
-    radial-gradient(circle at top right, rgba(196,181,253,.18), transparent 26%),
+    radial-gradient(circle at top right, rgba(96,165,250,.18), transparent 26%),
     radial-gradient(circle at left, rgba(96,165,250,.10), transparent 20%),
     linear-gradient(135deg,var(--hero-1) 0%,var(--hero-2) 55%,var(--hero-3) 100%);
 }
@@ -83,7 +83,7 @@ nav{
   width:240px;
   height:240px;
   border-radius:999px;
-  background:radial-gradient(circle, rgba(196,181,253,.18), transparent 62%);
+  background:radial-gradient(circle, rgba(96,165,250,.18), transparent 62%);
   pointer-events:none;
 }
 .hero h1{
@@ -134,7 +134,7 @@ nav{
   content:"";
   flex:1;
   height:1px;
-  background:linear-gradient(90deg,#c7d2fe,transparent);
+  background:linear-gradient(90deg,#bfdbfe,transparent);
 }
 .helper{
   font-size:12px;
@@ -146,7 +146,7 @@ textarea{
   width:100%;
   min-height:420px;
   resize:vertical;
-  border:2px solid #c7d2fe;
+  border:2px solid #bfdbfe;
   border-radius:16px;
   padding:16px;
   font:inherit;
@@ -160,7 +160,7 @@ textarea{
 textarea:focus{
   outline:none;
   border-color:var(--brand);
-  box-shadow:0 0 0 4px rgba(139,92,246,.12);
+  box-shadow:0 0 0 4px rgba(37,99,235,.12);
 }
 textarea::placeholder{color:#9ca3af}
 .toolbar{
@@ -175,18 +175,18 @@ button{
   transition:all .18s ease;
 }
 .btn-primary{
-  background:linear-gradient(135deg,#374151,var(--brand));
+  background:linear-gradient(135deg,#0f172a,#2563eb);
   color:#fff;
   font-weight:900;
   padding:13px 18px;
   border-radius:12px;
-  box-shadow:0 10px 25px rgba(139,92,246,.22);
+  box-shadow:0 10px 25px rgba(37,99,235,.22);
 }
-.btn-primary:hover{transform:translateY(-1px); background:linear-gradient(135deg,#313b49,#9f67ff)}
+.btn-primary:hover{transform:translateY(-1px); background:linear-gradient(135deg,#1e293b,#3b82f6)}
 .btn-secondary{
   background:#fff;
   color:var(--brand-dark);
-  border:1.5px solid #c7d2fe;
+  border:1.5px solid #bfdbfe;
   font-weight:800;
   padding:12px 15px;
   border-radius:12px;
@@ -230,7 +230,7 @@ button{
 }
 .health{
   background:linear-gradient(180deg,#ffffff 0%,#f7f3ff 100%);
-  border:1px solid #c7d2fe;
+  border:1px solid #bfdbfe;
   border-radius:18px;
   padding:18px;
   margin-bottom:18px;
@@ -265,7 +265,7 @@ button{
 .bar-fill{
   height:100%;
   border-radius:999px;
-  background:linear-gradient(90deg,#4f46e5,#60a5fa);
+  background:linear-gradient(90deg,#2563eb,#60a5fa);
   width:0%;
 }
 .issue-chips{
@@ -510,7 +510,7 @@ Updated: 3 days ago"></textarea>
       <div id="resultsWrap" style="display:none">
         <div class="meta-strip">
           <div class="stat">
-            <div class="num" id="statTickets" style="color:#1e1b4b">0</div>
+            <div class="num" id="statTickets" style="color:#0f172a">0</div>
             <div class="lbl">Tickets Audited</div>
           </div>
           <div class="stat">
