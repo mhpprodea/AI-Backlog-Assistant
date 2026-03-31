@@ -13,9 +13,9 @@
   --muted:#6b7280;
   --line:#e5e7eb;
   --line-strong:#d1d5db;
-  --brand:#8b5cf6;
-  --brand-dark:#5b21b6;
-  --brand-soft:#f5f3ff;
+  --brand:#4f46e5;
+  --brand-dark:#1e1b4b;
+  --brand-soft:#eef2ff;
   --hero-1:#232636;
   --hero-2:#2b3145;
   --hero-3:#3b4260;
@@ -134,7 +134,7 @@ nav{
   content:"";
   flex:1;
   height:1px;
-  background:linear-gradient(90deg,#ddd6fe,transparent);
+  background:linear-gradient(90deg,#c7d2fe,transparent);
 }
 .helper{
   font-size:12px;
@@ -146,7 +146,7 @@ textarea{
   width:100%;
   min-height:420px;
   resize:vertical;
-  border:2px solid #d8ccff;
+  border:2px solid #c7d2fe;
   border-radius:16px;
   padding:16px;
   font:inherit;
@@ -186,7 +186,7 @@ button{
 .btn-secondary{
   background:#fff;
   color:var(--brand-dark);
-  border:1.5px solid #d8ccff;
+  border:1.5px solid #c7d2fe;
   font-weight:800;
   padding:12px 15px;
   border-radius:12px;
@@ -230,7 +230,7 @@ button{
 }
 .health{
   background:linear-gradient(180deg,#ffffff 0%,#f7f3ff 100%);
-  border:1px solid #ddd6fe;
+  border:1px solid #c7d2fe;
   border-radius:18px;
   padding:18px;
   margin-bottom:18px;
@@ -265,7 +265,7 @@ button{
 .bar-fill{
   height:100%;
   border-radius:999px;
-  background:linear-gradient(90deg,#8b5cf6,#60a5fa);
+  background:linear-gradient(90deg,#4f46e5,#60a5fa);
   width:0%;
 }
 .issue-chips{
@@ -455,11 +455,11 @@ footer{
 <body>
 <nav>
   <div class="nav-brand">Backlog <span>QA Assistant</span></div>
-  <div class="nav-pill">Linear Workflow</div>
+  <div class="nav-pill">Backlog Tool</div>
 </nav>
 
 <section class="hero">
-  <h1>Turn a messy backlog into <span>execution-ready Linear tickets</span></h1>
+  <h1>Turn a messy backlog into <span>execution-ready tickets</span></h1>
   <p>Audit ticket quality, suggest BE/FE labels, flag stale items, surface missing project or dependencies, and sort work from urgent to low — all in one PM-friendly view.</p>
 </section>
 
@@ -468,7 +468,7 @@ footer{
     <section class="panel pad">
       <div class="section-title">Input</div>
       <p class="helper">
-        Paste Linear-like tickets in plain text. Use fields like <strong>Title</strong>, <strong>Description</strong>, <strong>Priority</strong>, <strong>Labels</strong>, <strong>Project</strong>, <strong>Status</strong>, <strong>Assignee</strong>, <strong>Design</strong>, <strong>Blocked by</strong>, <strong>Updated</strong>. Separate tickets with <strong>---</strong>.
+        Paste tickets in plain text. Use fields like <strong>Title</strong>, <strong>Description</strong>, <strong>Priority</strong>, <strong>Labels</strong>, <strong>Project</strong>, <strong>Status</strong>, <strong>Assignee</strong>, <strong>Design</strong>, <strong>Blocked by</strong>, <strong>Updated</strong>. Separate tickets with <strong>---</strong>.
       </p>
       <textarea id="input" placeholder="Title: Dashboard export crashes for large workspaces
 Description: Export to PDF crashes when workspace has 500+ rows. Users cannot complete reporting.
@@ -497,7 +497,7 @@ Updated: 3 days ago"></textarea>
         <button class="btn-ghost" onclick="clearAll()">Clear</button>
       </div>
       <small class="code-note">
-        Tip: this MVP is intentionally focused on backlog hygiene and execution readiness, not syncing live with Linear yet.
+        Tip: this MVP is intentionally focused on backlog hygiene and execution readiness, not syncing live with  yet.
       </small>
     </section>
 
@@ -510,7 +510,7 @@ Updated: 3 days ago"></textarea>
       <div id="resultsWrap" style="display:none">
         <div class="meta-strip">
           <div class="stat">
-            <div class="num" id="statTickets" style="color:#5b21b6">0</div>
+            <div class="num" id="statTickets" style="color:#1e1b4b">0</div>
             <div class="lbl">Tickets Audited</div>
           </div>
           <div class="stat">
@@ -623,6 +623,9 @@ function clearAll(){
 
 function analyzeBacklog(){
   const raw = document.getElementById('input').value.trim();
+  if(/https?:\/\//.test(raw) && !/Title:/i.test(raw)){
+    alert("Paste ticket content, not just a link.");
+  }
   if(!raw){
     alert('Paste backlog tickets first.');
     return;
