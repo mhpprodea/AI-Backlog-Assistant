@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Backlog Assistant</title>
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<defs>
+<linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="%236366f1"/>
+<stop offset="100%" stop-color="%23a855f7"/>
+</linearGradient>
+</defs>
+<rect x="6" y="6" width="52" height="52" rx="14" fill="%23635b6f"/>
+<path d="M20 42V22h8c8.5 0 13 3.5 13 10s-4.5 10-13 10h-8zm6-5h2.1c5 0 7-1.7 7-5s-2-5-7-5H26v10z" fill="url(%23g)"/>
+<rect x="39" y="18" width="7" height="28" rx="3.5" fill="%23c4b5fd"/>
+</svg>'>
+
+
+
+<style>
+:root{
+  --page:#fbfbfd;
+  --surface:#ffffff;
+  --surface-soft:#f8f8fc;
+  --text:#2d2736;
+  --muted:#7b7487;
+  --line:#ece7f3;
+  --dark:#312b3a;
+  --purple:#8b5cf6;
+  --purple-dark:#6d28d9;
+  --purple-soft:#f4efff;
+  --shadow:0 14px 34px rgba(49,43,58,.08);
+  --shadow-sm:0 8px 20px rgba(49,43,58,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--page);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+a{color:inherit}
+nav{
+  position:sticky;top:0;z-index:30;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:1360px;margin:0 auto;padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:-.03em;color:var(--dark)}
+.brand-mark{
+  width:38px;height:38px;border-radius:12px;
+  background:linear-gradient(135deg,var(--dark),var(--purple));
+  display:grid;place-items:center;box-shadow:var(--shadow-sm);
+}
+.brand-mark span{font-size:16px;color:#fff;font-weight:900}
+.brand-text{font-size:18px}
+.brand-text b{color:var(--purple-dark);font-weight:900}
+.nav-pill{
+  border:1px solid #e6def8;
+  background:var(--purple-soft);
+  color:#544d61;
+  border-radius:999px;padding:8px 12px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+}
+.hero{max-width:1360px;margin:0 auto;padding:28px 24px 18px}
+.hero-box{
+  background:
+    radial-gradient(circle at 86% 20%, rgba(139,92,246,.14), transparent 18%),
+    linear-gradient(135deg,#2d2736 0%, #3a3147 62%, #4b3f5e 100%);
+  border:1px solid rgba(139,92,246,.16);
+  border-radius:28px;
+  padding:30px 30px 32px;
+  box-shadow:0 16px 34px rgba(49,43,58,.14);
+  position:relative;
+  overflow:hidden;
+}
+.hero-box:before{
+  content:"";
+  position:absolute;right:-36px;top:-42px;width:220px;height:220px;border-radius:999px;
+  background:radial-gradient(circle, rgba(139,92,246,.12), transparent 62%);
+}
+.hero h1{
+  position:relative;z-index:1;
+  font-size:38px;line-height:1.03;letter-spacing:-.05em;font-weight:950;max-width:800px;margin-bottom:12px;color:#ffffff;
+}
+.hero p{
+  position:relative;z-index:1;
+  max-width:860px;color:#ddd7e8;font-size:14px;line-height:1.78;
+}
+.hero p strong{color:#ffffff}
+.wrap{max-width:1360px;margin:0 auto;padding:20px 24px 42px}
+.grid{display:grid;grid-template-columns:420px minmax(0,1fr);gap:20px;align-items:start}
+.panel{
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:24px;
+  box-shadow:var(--shadow-sm);
+}
+.panel-pad{padding:20px}
+.sticky{position:sticky;top:92px}
+.section-title{
+  display:flex;align-items:center;gap:12px;
+  font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#5a5268;margin-bottom:14px;
+}
+.section-title:after{
+  content:"";height:1px;flex:1;background:linear-gradient(90deg,#ece7f3,transparent);
+}
+.helper{color:var(--muted);font-size:12px;line-height:1.7;margin-bottom:12px}
+.helper strong{color:var(--dark)}
+.input-box{
+  background:var(--surface-soft);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+}
+textarea{
+  width:100%;min-height:430px;resize:vertical;
+  background:#ffffff;color:var(--text);
+  border:1.5px solid #e5dcf7;
+  border-radius:18px;padding:16px;
+  font:inherit;font-size:13px;line-height:1.7;
+  outline:none;transition:border-color .18s ease, box-shadow .18s ease;
+}
+textarea:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 4px rgba(139,92,246,.10);
+}
+textarea::placeholder{color:#9b93a8}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+button{
+  border:none;cursor:pointer;border-radius:14px;
+  padding:12px 16px;font:inherit;font-weight:900;
+  transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease, background .16s ease;
+}
+button:hover{transform:translateY(-1px)}
+.btn-primary{
+  color:#fff;
+  background:linear-gradient(135deg,var(--dark),var(--purple));
+  box-shadow:0 10px 20px rgba(109,40,217,.14);
+}
+.btn-secondary{
+  color:#5a5268;background:#fff;border:1px solid var(--line);
+}
+.btn-ghost{
+  color:var(--muted);background:#faf9fc;border:1px solid var(--line);
+}
+.note{
+  margin-top:12px;
+  background:var(--purple-soft);
+  border:1px solid #e6def8;
+  color:#5a5268;
+  padding:12px 13px;border-radius:14px;font-size:11px;line-height:1.7;
+}
+.note strong{color:var(--dark)}
+.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.tile{
+  background:var(--surface);
+  border:1px solid var(--line);border-radius:18px;padding:16px 14px;box-shadow:var(--shadow-sm);
+}
+.tile .value{
+  font-size:28px;font-weight:950;letter-spacing:-.05em;line-height:1;margin-bottom:6px;color:var(--dark);
+}
+.tile .label{
+  font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:900;
+}
+.health{
+  background:linear-gradient(135deg,#fbf9ff 0%, #f4efff 100%);
+  border:1px solid #e6def8;
+  border-radius:22px;padding:18px;margin-bottom:18px;
+}
+.health-top{
+  display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px;
+}
+.health-score{
+  font-size:48px;line-height:1;font-weight:950;letter-spacing:-.06em;
+  color:var(--purple-dark);
+}
+.health-copy{max-width:460px;color:#5a5268;font-size:12px;line-height:1.7}
+.track{height:12px;border-radius:999px;background:#ece7f3;overflow:hidden}
+.fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--dark),var(--purple));
+  border-radius:999px;
+}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{
+  background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 10px;
+  font-size:11px;color:#5a5268;font-weight:800;
+}
+.results{display:flex;flex-direction:column;gap:16px}
+.ticket{
+  background:linear-gradient(180deg,#ffffff 0%,#fcfbfe 100%);
+  border:1px solid var(--line);
+  border-radius:22px;box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.ticket-top{
+  padding:16px 18px 12px;border-bottom:1px solid #f0ecf5;
+  background:linear-gradient(180deg,#ffffff 0%,#fcfbfe 100%);
+}
+.ticket-title{
+  color:var(--dark);font-weight:950;font-size:18px;line-height:1.35;letter-spacing:-.03em;margin-bottom:10px;
+}
+.ticket-meta{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  border-radius:999px;padding:6px 10px;font-size:10px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.07em;
+}
+.pr-urgent,.pr-high,.pr-medium,.pr-low,
+.fr-up,.fr-review,.fr-stale,.status-pill{
+  background:var(--purple-soft);
+  color:#5a5268;
+  border:1px solid #eadffd;
+}
+.ticket-grid{
+  padding:16px 18px 18px;
+  display:grid;grid-template-columns:1.2fr .95fr .85fr;gap:14px;
+}
+.box{
+  background:#faf9fc;border:1px solid var(--line);border-radius:18px;padding:14px;
+}
+.box h4{
+  font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;
+}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{
+  position:relative;padding-left:22px;font-size:12px;line-height:1.6;color:#5a5268;
+}
+.item:before{
+  content:"";position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:999px;display:block;
+}
+.item.ok:before,.item.warn:before,.item.bad:before,.item.info:before{
+  background:#ddd1ff;box-shadow:inset 0 0 0 4px var(--purple);
+}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kv-card{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;
+}
+.k{
+  font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:900;margin-bottom:5px;
+}
+.v{
+  font-size:13px;color:var(--dark);font-weight:800;line-height:1.5;
+}
+.raw{
+  background:#fff;border:1px dashed #d9d3e6;border-radius:14px;padding:11px 12px;font-size:12px;line-height:1.65;color:#5a5268;
+}
+.raw strong{color:var(--dark)}
+.empty{
+  display:none;
+  background:linear-gradient(180deg,#ffffff 0%,#fcfbfe 100%);
+  border:1px dashed #d9d3e6;border-radius:22px;padding:38px 26px;text-align:center;color:var(--muted);
+}
+.empty.on{display:block}
+.empty strong{
+  display:block;font-size:20px;color:var(--dark);margin-bottom:8px;
+}
+.footer{
+  max-width:1360px;margin:0 auto;padding:0 24px 36px;color:#9b93a8;font-size:11px;text-align:center;
+}
+.hidden{display:none!important}
+@media (max-width:1200px){
+  .grid{grid-template-columns:380px minmax(0,1fr)}
+  .ticket-grid{grid-template-columns:1fr 1fr}
+  .ticket-grid .box:last-child{grid-column:1/-1}
+}
+@media (max-width:980px){
+  .grid{grid-template-columns:1fr}
+  .sticky{position:static}
+  .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ticket-grid{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .nav-inner,.hero,.wrap,.footer{padding-left:16px;padding-right:16px}
+  .hero h1{font-size:30px}
+  .summary-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+
+
+
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="brand-mark"><span>AI</span></div>
+      <div class="brand-text">AI <b>Backlog Assistant</b></div>
+    </div>
+    <div class="nav-pill">Backlog Health + Ticket Readiness</div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-box">
+    <h1>Turn backlog chaos into clear, execution-ready tickets</h1>
+    <p>
+      Paste raw ticket content or direct ticket links. The tool audits backlog quality, suggests only <strong>BE</strong> or <strong>FE</strong> labels, flags missing description / project / dependency / design issues, marks freshness, and reorders work from urgent to low in a faster, easier-to-scan view.
+    </p>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="panel panel-pad sticky">
+      <div class="section-title">Input</div>
+      <p class="helper">
+        Paste <strong>raw ticket text</strong> or <strong>direct ticket links</strong>. Separate multiple tickets with <strong>---</strong>.
+        If you paste only a link, the tool will still create a lightweight backlog item from the URL and clearly mark that full ticket content is missing.
+      </p>
+      <div class="input-box">
+        <textarea id="input" placeholder="Option 1 — raw ticket text
+
+Title: Dashboard export crashes for large workspaces
+Description: Export to PDF crashes when workspace has 500+ rows. Finance teams cannot finish reporting.
+Priority:
+Labels:
+Project:
+Status: Backlog
+Assignee:
+Design:
+Blocked by: API export service refactor
+Updated: 48 days ago
+
+---
+Option 2 — direct ticket link
+
+https://linear.app/company/issue/ABC-123/dashboard-export-crash-for-large-workspaces"></textarea>
+        <div class="actions">
+          <button class="btn-primary" onclick="analyzeBacklog()">Analyze Backlog</button>
+          <button class="btn-secondary" onclick="loadDemo()">Try Demo</button>
+          <button class="btn-ghost" onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+      <div class="note">
+        <strong>How link mode works:</strong> when you paste only a direct ticket link, the tool parses what it can from the URL and creates a minimal backlog item for review. If full ticket content is missing, it will say so directly instead of pretending it knows more than it does.
+      </div>
+    </section>
+
+    <section class="panel panel-pad">
+      <div id="emptyState" class="empty on">
+        <strong>Ready when you are</strong>
+        Paste backlog items on the left and get a cleaner, more UI-friendly audit here — without the endless scrolling.
+      </div>
+
+      <div id="resultsWrap" class="hidden">
+        <div class="summary-grid">
+          <div class="tile">
+            <div class="value" id="statTickets">0</div>
+            <div class="label">Tickets Audited</div>
+          </div>
+          <div class="tile">
+            <div class="value" id="statUrgent" style="color:#dc2626">0</div>
+            <div class="label">Urgent / High</div>
+          </div>
+          <div class="tile">
+            <div class="value" id="statWarnings" style="color:#d97706">0</div>
+            <div class="label">Warnings</div>
+          </div>
+          <div class="tile">
+            <div class="value" id="statProjects" style="color:#2563eb">0</div>
+            <div class="label">Missing Project</div>
+          </div>
+        </div>
+
+        <div class="health">
+          <div class="health-top">
+            <div class="health-score" id="healthScore">0%</div>
+            <div class="health-copy" id="healthCopy">
+              Backlog health reflects whether tickets are clear, fresh enough, categorized correctly, and ready for grooming or execution.
+            </div>
+          </div>
+          <div class="track"><div class="fill" id="healthFill"></div></div>
+          <div class="chips" id="healthChips"></div>
+        </div>
+
+        <div class="section-title">Ticket Audit</div>
+        <div class="results" id="results"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="footer">AI Backlog Assistant · Portfolio prototype for PM backlog management and ticket readiness</div>
+
+
+<script>
+const DEMO = `Title: Dashboard export crashes for large workspaces
+Description: Export to PDF crashes when workspace has 500+ rows. Finance teams cannot finish reporting at month-end.
+Priority:
+Labels:
+Project:
+Status: Backlog
+Assignee:
+Design:
+Blocked by: API export service refactor
+Updated: 48 days ago
+
+---
+Title: Improve onboarding checklist completion state
+Description: Checklist does not clearly show completed steps. UI and state management both look off.
+Priority: Low
+Labels:
+Project: Onboarding Improvements
+Status: Todo
+Assignee:
+Design: https://www.figma.com/file/example-onboarding
+Updated: 12 days ago
+
+---
+https://linear.app/company/issue/ABC-123/dashboard-export-crash-for-large-workspaces
+
+---
+Title: Add filter presets to analytics dashboard
+Description: Customers want to save common dashboard filter combinations and reuse them across sessions.
+Priority: Medium
+Labels:
+Project:
+Status: Backlog
+Assignee:
+Design:
+Updated: 3 days ago
+
+---
+Title: API timeout on scheduled report generation
+Description: Scheduled reports fail after 30 seconds for some enterprise accounts. Backend retries are inconsistent.
+Priority: High
+Labels:
+Project: Reporting Reliability
+Status: In Progress
+Assignee:
+Design:
+Blocked by:
+Updated: 22 days ago`;
+
+function loadDemo(){
+  const el = document.getElementById('input');
+  if (el) el.value = DEMO;
+}
+
+function clearAll(){
+  const el = document.getElementById('input');
+  if (el) el.value = '';
+  document.getElementById('resultsWrap').classList.add('hidden');
+  document.getElementById('emptyState').classList.add('on');
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('healthChips').innerHTML = '';
+}
+
+function analyzeBacklog(){
+  const inputEl = document.getElementById('input');
+  const raw = inputEl ? inputEl.value.trim() : '';
+  if(!raw){
+    alert('Paste ticket content or direct ticket links first.');
+    return;
+  }
+
+  const tickets = parseTickets(raw).map(auditTicket);
+  tickets.sort((a,b)=> priorityRank(a.priority) - priorityRank(b.priority) || b.warningCount - a.warningCount || b.ageDays - a.ageDays);
+
+  renderSummary(tickets);
+  renderTickets(tickets);
+
+  document.getElementById('emptyState').classList.remove('on');
+  document.getElementById('resultsWrap').classList.remove('hidden');
+}
+
+function parseTickets(raw){
+  const chunks = raw.split(/\n\s*---+\s*\n/g).map(x=>x.trim()).filter(Boolean);
+  return chunks.map((chunk, idx) => {
+    if(isDirectLinkOnly(chunk)) return parseLinkTicket(chunk, idx);
+
+    const lines = chunk.split('\n');
+    const t = {
+      source:'text',
+      title:'',
+      description:'',
+      priority:'',
+      labels:'',
+      project:'',
+      status:'',
+      assignee:'',
+      design:'',
+      blockedBy:'',
+      updated:'',
+      link:''
+    };
+
+    let descriptionMode = false;
+    for(const lineRaw of lines){
+      const line = lineRaw.trim();
+      if(!line) continue;
+
+      if(isDirectLinkOnly(line) && !t.title && !t.description){
+        Object.assign(t, parseLinkTicket(line, idx));
+        continue;
+      }
+
+      const match = line.match(/^([A-Za-z ][A-Za-z /-]*):\s*(.*)$/);
+      if(match){
+        descriptionMode = false;
+        const key = match[1].toLowerCase().trim();
+        const value = match[2].trim();
+        if(key === 'title') t.title = value;
+        else if(key === 'description'){ t.description = value; descriptionMode = true; }
+        else if(key === 'priority') t.priority = value;
+        else if(key === 'labels') t.labels = value;
+        else if(key === 'project' || key === 'epic') t.project = value;
+        else if(key === 'status') t.status = value;
+        else if(key === 'assignee' || key === 'owner') t.assignee = value;
+        else if(key === 'design' || key === 'figma') t.design = value;
+        else if(key === 'blocked by' || key === 'depends on' || key === 'dependency') t.blockedBy = value;
+        else if(key === 'updated' || key === 'last updated') t.updated = value;
+        else if(key === 'link' || key === 'url') t.link = value;
+      } else if(descriptionMode){
+        t.description += (t.description ? ' ' : '') + line;
+      } else if(!t.title){
+        t.title = line;
+      } else {
+        t.description += (t.description ? ' ' : '') + line;
+      }
+    }
+
+    if(!t.title) t.title = 'Untitled ticket ' + (idx + 1);
+    return t;
+  });
+}
+
+function isDirectLinkOnly(text){
+  return /^https?:\/\/\S+$/i.test(text.trim());
+}
+
+function parseLinkTicket(url, idx){
+  let title = 'Direct ticket link';
+  try{
+    const u = new URL(url.trim());
+    const parts = u.pathname.split('/').filter(Boolean);
+    const slug = parts[parts.length - 1] || '';
+    if(slug && !/^[A-Z]+-\d+$/i.test(slug)){
+      title = slug.replace(/[-_]+/g,' ').replace(/\b\w/g, m => m.toUpperCase());
+    } else if(parts.length >= 2){
+      title = ('Ticket ' + parts[parts.length - 2]).trim();
+    }
+  }catch(e){
+    title = 'Direct ticket link';
+  }
+
+  return {
+    source:'link',
+    title,
+    description:'Only a direct ticket link was provided. Full ticket content is not available in this input, so the audit is limited until title, description, or ticket fields are pasted.',
+    priority:'',
+    labels:'',
+    project:'',
+    status:'Backlog',
+    assignee:'',
+    design:'',
+    blockedBy:'',
+    updated:'',
+    link:url.trim()
+  };
+}
+
+function auditTicket(t){
+  const text = (t.title + ' ' + t.description).toLowerCase();
+  const existingLabels = splitCsv(t.labels).filter(x => /^(be|fe)$/i.test(x));
+  const warnings = [];
+  const flags = [];
+  const fixes = [];
+
+  const priority = normalizePriority(t.priority) || inferPriority(text);
+  const suggestedLabels = inferBeFeLabels(text, existingLabels);
+  const projectSuggestion = inferProject(t.title, t.description, t.project);
+  const ageDays = parseAgeDays(t.updated);
+  const freshness = getFreshness(ageDays);
+  const hasDependencyMention = /(blocked by|depends on|dependency|waiting on|after\s+[A-Z]{2,}-\d+)/i.test([t.description, t.blockedBy].join(' '));
+  const hasLinkedDependency = !!(t.blockedBy && t.blockedBy.trim());
+  const hasDesignLink = !!(t.design && t.design.trim());
+  const malformedLink = t.link && !looksValidLink(t.link);
+  const malformedDesign = t.design && !looksValidLink(t.design);
+  const status = t.status || 'Backlog';
+  const assigneeMissing = !t.assignee || !t.assignee.trim();
+  const labelsMissing = existingLabels.length === 0;
+  const descriptionMissing = !t.description || t.description.trim().length < 24;
+  const projectMissing = !t.project || !t.project.trim();
+
+  fixes.push({k:'Labels', v:(mergeLabels(existingLabels, suggestedLabels).join(', ') || 'Manual review needed')});
+  fixes.push({k:'Priority', v:priority});
+  fixes.push({k:'Freshness', v:freshness.label});
+  fixes.push({k:'Project', v:(projectMissing ? projectSuggestion : t.project)});
+
+  if(descriptionMissing){
+    warnings.push('Description is missing or too thin.');
+    flags.push({type:'bad', text:'Add more context so engineering can scope and estimate work without guesswork.'});
+  } else {
+    flags.push({type:'ok', text:'Description gives enough context to understand the request.'});
+  }
+
+  if(labelsMissing){
+    warnings.push('No BE / FE label assigned.');
+    flags.push({type:'warn', text:'Suggested labels: ' + (suggestedLabels.join(', ') || 'No clear BE / FE signal')});
+  } else {
+    flags.push({type:'ok', text:'Existing labels: ' + existingLabels.join(', ')});
+  }
+
+  if(projectMissing){
+    warnings.push('No project / epic assigned.');
+    flags.push({type:'warn', text:'Suggested project: ' + projectSuggestion});
+  } else {
+    flags.push({type:'ok', text:'Project mapped to: ' + t.project});
+  }
+
+  if(hasDependencyMention && !hasLinkedDependency){
+    warnings.push('Dependency mentioned but no linked ticket is provided.');
+    flags.push({type:'bad', text:'This ticket references a blocker or dependency, but there is no actual linked ticket field.'});
+  } else if(hasLinkedDependency){
+    flags.push({type:'ok', text:'Dependency captured: ' + t.blockedBy});
+  } else {
+    flags.push({type:'info', text:'No explicit dependency found.'});
+  }
+
+  if(!hasDesignLink && shouldHaveDesign(text)){
+    warnings.push('Likely needs a design link.');
+    flags.push({type:'warn', text:'UI / workflow change detected but design link is missing.'});
+  } else if(hasDesignLink){
+    if(malformedDesign){
+      warnings.push('Design link looks malformed or incomplete.');
+      flags.push({type:'bad', text:'Design link looks broken or incomplete.'});
+    } else {
+      flags.push({type:'ok', text:'Design link provided.'});
+    }
+  }
+
+  if(t.source === 'link'){
+    warnings.push('Only direct link was pasted; full ticket content is missing.');
+    flags.push({type:'warn', text:'Link mode is limited until actual title / description content is pasted.'});
+    if(malformedLink){
+      warnings.push('Ticket link looks malformed.');
+      flags.push({type:'bad', text:'Ticket URL looks broken or incomplete.'});
+    } else if(t.link){
+      flags.push({type:'info', text:'Direct link captured for review.'});
+    }
+  }
+
+  if(assigneeMissing){
+    if(priority === 'Urgent' || priority === 'High' || /in progress|started|doing/i.test(status)){
+      warnings.push('High-priority or active work has no assignee.');
+      flags.push({type:'bad', text:'No assignee on active or important work. That is risky.'});
+    } else {
+      flags.push({type:'info', text:'No assignee — acceptable for untouched backlog items before planning.'});
+    }
+  } else {
+    flags.push({type:'ok', text:'Assignee present: ' + t.assignee});
+  }
+
+  if(ageDays >= 30){
+    warnings.push('Ticket looks stale.');
+  }
+
+  return {...t, priority, suggestedLabels: mergeLabels(existingLabels, suggestedLabels), projectSuggestion, freshness, ageDays, warnings, warningCount:warnings.length, fixes, flags};
+}
+
+function renderSummary(tickets){
+  const urgentHigh = tickets.filter(t => ['Urgent','High'].includes(t.priority)).length;
+  const warnings = tickets.reduce((sum,t)=> sum + t.warningCount, 0);
+  const missingProjects = tickets.filter(t => !t.project || !t.project.trim()).length;
+  const score = calculateScore(tickets);
+
+  document.getElementById('statTickets').textContent = tickets.length;
+  document.getElementById('statUrgent').textContent = urgentHigh;
+  document.getElementById('statWarnings').textContent = warnings;
+  document.getElementById('statProjects').textContent = missingProjects;
+  document.getElementById('healthScore').textContent = score + '%';
+  document.getElementById('healthFill').style.width = score + '%';
+
+  document.getElementById('healthCopy').textContent =
+    score >= 80 ? 'Backlog looks mostly healthy. Remaining gaps are small and should be easy to clean up.'
+    : score >= 60 ? 'Backlog is workable, but several tickets still need labels, project mapping, freshness review, or clearer scope.'
+    : 'Backlog needs cleanup. Important tickets are still missing structure that engineering or planning needs to move confidently.';
+
+  const chips = [];
+  const missingLabels = tickets.filter(t => t.warnings.some(w => /BE \/ FE label/i.test(w))).length;
+  const stale = tickets.filter(t => t.freshness.key === 'stale').length;
+  const weakDescriptions = tickets.filter(t => t.warnings.some(w => /Description/i.test(w))).length;
+  const dependencyGaps = tickets.filter(t => t.warnings.some(w => /Dependency mentioned/i.test(w))).length;
+  const linkOnly = tickets.filter(t => t.source === 'link').length;
+
+  if(missingLabels) chips.push(`${missingLabels} missing BE/FE labels`);
+  if(missingProjects) chips.push(`${missingProjects} missing project`);
+  if(stale) chips.push(`${stale} stale`);
+  if(weakDescriptions) chips.push(`${weakDescriptions} weak descriptions`);
+  if(dependencyGaps) chips.push(`${dependencyGaps} dependency gaps`);
+  if(linkOnly) chips.push(`${linkOnly} link-only tickets`);
+
+  document.getElementById('healthChips').innerHTML = chips.length
+    ? chips.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')
+    : `<span class="chip">No major hygiene gaps found</span>`;
+}
+
+function renderTickets(tickets){
+  const wrap = document.getElementById('results');
+  wrap.innerHTML = tickets.map((t, idx) => `
+      <article class="ticket">
+        <div class="ticket-top">
+          <div class="ticket-title">${idx + 1}. ${escapeHtml(t.title)}</div>
+          <div class="ticket-meta">
+            <span class="pill ${priorityClass(t.priority)}">${escapeHtml(t.priority)}</span>
+            <span class="pill ${freshnessClass(t.freshness.key)}">${escapeHtml(t.freshness.label)}</span>
+            <span class="pill status-pill">${escapeHtml(t.status || 'Backlog')}</span>
+          </div>
+        </div>
+        <div class="ticket-grid">
+          <section class="box">
+            <h4>At a glance</h4>
+            <div class="list">
+              ${t.flags.map(f => `<div class="item ${f.type}">${escapeHtml(f.text)}</div>`).join('')}
+            </div>
+            <div class="raw" style="margin-top:12px">
+              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
+              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
+            </div>
+          </section>
+
+          <section class="box">
+            <h4>Suggested fixes</h4>
+            <div class="kv">
+              ${t.fixes.map(f => `
+                <div class="kv-card">
+                  <div class="k">${escapeHtml(f.k)}</div>
+                  <div class="v">${escapeHtml(f.v)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+
+          <section class="box">
+            <h4>Warnings</h4>
+            <div class="list">
+              ${t.warnings.length
+                ? t.warnings.map(w => `<div class="item bad">${escapeHtml(w)}</div>`).join('')
+                : `<div class="item ok">No major backlog hygiene blockers found.</div>`}
+            </div>
+          </section>
+        </div>
+      </article>
+  `).join('');
+}
+
+function calculateScore(tickets){
+  const penalties =
+    tickets.filter(t => t.warnings.some(w => /Description/i.test(w))).length * 12 +
+    tickets.filter(t => t.warnings.some(w => /BE \/ FE label/i.test(w))).length * 9 +
+    tickets.filter(t => t.warnings.some(w => /project/i.test(w))).length * 10 +
+    tickets.filter(t => t.freshness.key === 'stale').length * 9 +
+    tickets.filter(t => t.warnings.some(w => /Dependency mentioned/i.test(w))).length * 12 +
+    tickets.filter(t => t.warnings.some(w => /assignee/i.test(w))).length * 9 +
+    tickets.filter(t => t.warnings.some(w => /link/i.test(w))).length * 8;
+  return Math.max(15, Math.round(100 - penalties / Math.max(1, tickets.length)));
+}
+
+function splitCsv(text){
+  return (text || '').split(',').map(x => x.trim()).filter(Boolean);
+}
+
+function mergeLabels(existing, suggested){
+  const labels = new Set([...existing, ...suggested].map(x => x.trim().toUpperCase()).filter(Boolean));
+  return [...labels].filter(x => x === 'BE' || x === 'FE');
+}
+
+function normalizePriority(p){
+  if(!p) return '';
+  const x = p.toLowerCase().trim();
+  if(['urgent','critical','p0','blocker'].includes(x)) return 'Urgent';
+  if(['high','p1'].includes(x)) return 'High';
+  if(['medium','med','p2'].includes(x)) return 'Medium';
+  if(['low','p3'].includes(x)) return 'Low';
+  return '';
+}
+
+function inferPriority(text){
+  if(/crash|cannot|can't|fails? to|blocked|blocker|timeout|data loss|billing broken|login broken|month-end blocked/.test(text)) return 'Urgent';
+  if(/slow|performance|inconsistent|retry|not clear|confusing|missing state|does not show|error/.test(text)) return 'High';
+  if(/add|support|allow|save|preset|improve|enhance/.test(text)) return 'Medium';
+  return 'Low';
+}
+
+function priorityRank(p){
+  return {Urgent:0, High:1, Medium:2, Low:3}[p] ?? 4;
+}
+
+function inferBeFeLabels(text, existing){
+  const found = [];
+  const already = existing.map(x => x.toUpperCase());
+  const add = label => { if(!found.includes(label) && !already.includes(label)) found.push(label); };
+
+  if(/api|backend|db|database|query|server|timeout|cron|scheduled|service|retry|auth|permission|export service|job worker/.test(text)) add('BE');
+  if(/ui|frontend|button|modal|card|layout|screen|state management|spacing|component|tooltip|dropdown|onboarding|workflow|dashboard view/.test(text)) add('FE');
+
+  return found;
+}
+
+function inferProject(title, description, current){
+  if(current && current.trim()) return current.trim();
+  const text = (title + ' ' + description).toLowerCase();
+  if(/dashboard|report|export|analytics/.test(text)) return 'Reporting & Dashboard';
+  if(/onboarding|signup|setup/.test(text)) return 'Onboarding';
+  if(/api|backend|scheduled|timeout|retry|service/.test(text)) return 'Platform Reliability';
+  if(/billing|invoice|payment/.test(text)) return 'Billing';
+  if(/search|filter/.test(text)) return 'Search & Filters';
+  return 'New project recommended';
+}
+
+function parseAgeDays(updated){
+  if(!updated) return 999;
+  const text = updated.toLowerCase();
+  const m1 = text.match(/(\d+)\s*day/);
+  const m2 = text.match(/(\d+)\s*week/);
+  const m3 = text.match(/(\d+)\s*month/);
+  if(m1) return parseInt(m1[1],10);
+  if(m2) return parseInt(m2[1],10) * 7;
+  if(m3) return parseInt(m3[1],10) * 30;
+  if(/yesterday/.test(text)) return 1;
+  if(/today|just now/.test(text)) return 0;
+  return 999;
+}
+
+function getFreshness(days){
+  if(days <= 7) return {key:'up', label:'Up to date'};
+  if(days <= 30) return {key:'review', label:'Recently reviewed'};
+  return {key:'stale', label:'Stale'};
+}
+
+function shouldHaveDesign(text){
+  return /ui|frontend|screen|layout|modal|dashboard|button|card|workflow|state|onboarding/.test(text);
+}
+
+function looksValidLink(url){
+  return /^https?:\/\/\S+$/i.test((url || '').trim());
+}
+
+function priorityClass(priority){
+  return {'Urgent':'pr-urgent','High':'pr-high','Medium':'pr-medium','Low':'pr-low'}[priority] || 'pr-low';
+}
+
+function freshnessClass(key){
+  return {'up':'fr-up','review':'fr-review','stale':'fr-stale'}[key] || 'fr-stale';
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+</script>
+
+</body>
+</html>
