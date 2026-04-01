@@ -1111,6 +1111,8 @@ function getWarningHint(w){
   if(/link looks malformed/i.test(w)) return 'Check the URL — it may be truncated or missing the protocol (https://).';
   return null;
 }
+
+function buildCleanTicket(t){
   const title = t.title || 'Untitled ticket';
   const labels = (t.suggestedLabels && t.suggestedLabels.length) ? t.suggestedLabels.join(', ') : '';
   const project = t.project && t.project.trim() ? t.project : t.projectSuggestion;
