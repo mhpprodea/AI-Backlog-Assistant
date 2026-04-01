@@ -196,6 +196,79 @@ button:hover{transform:translateY(-1px)}
   font-size:11px;color:#5a5268;font-weight:800;
 }
 .results{display:flex;flex-direction:column;gap:16px}
+
+.top-priorities{
+  background:linear-gradient(135deg,#fffaf3 0%, #ffffff 100%);
+  border:1px solid #fed7aa;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:var(--shadow-sm);
+  margin-bottom:18px;
+}
+.top-priorities h3{
+  font-size:13px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:#9a3412;
+  margin-bottom:12px;
+}
+.priority-list{display:flex;flex-direction:column;gap:10px}
+.priority-row{
+  background:#fff;
+  border:1px solid #fde68a;
+  border-radius:16px;
+  padding:12px 14px;
+}
+.priority-row strong{
+  display:block;
+  color:var(--dark);
+  font-size:14px;
+  margin-bottom:4px;
+}
+.priority-row span{
+  color:#7c2d12;
+  font-size:12px;
+  line-height:1.6;
+}
+.ticket-grid{
+  padding:16px 18px 18px;
+  display:grid;grid-template-columns:1.25fr .95fr;gap:14px;
+}
+.audit-summary{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.audit-group{
+  background:#faf9fc;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:13px;
+}
+.audit-group h4{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.audit-group.must h4{color:#991b1b}
+.audit-group.should h4{color:#9a3412}
+.audit-group.ok h4{color:#047857}
+.audit-group .list{gap:8px}
+.audit-group.must{border-color:#fecaca;background:#fffafa}
+.audit-group.should{border-color:#fed7aa;background:#fffaf3}
+.audit-group.ok{border-color:#bbf7d0;background:#f7fff9}
+.condensed-fixes .kv{grid-template-columns:1fr 1fr}
+.raw-toggle{
+  margin-top:10px;
+  font-size:11px;
+  color:var(--purple-dark);
+  font-weight:800;
+  cursor:pointer;
+}
+.raw.collapsed{display:none}
 .ticket{
   background:linear-gradient(180deg,#ffffff 0%,#fcfbfe 100%);
   border:1px solid var(--line);
@@ -214,12 +287,14 @@ button:hover{transform:translateY(-1px)}
   border-radius:999px;padding:6px 10px;font-size:10px;font-weight:900;
   text-transform:uppercase;letter-spacing:.07em;
 }
-.pr-urgent,.pr-high,.pr-medium,.pr-low,
-.fr-up,.fr-review,.fr-stale,.status-pill{
-  background:var(--purple-soft);
-  color:#5a5268;
-  border:1px solid #eadffd;
-}
+.pr-urgent{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.pr-high{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.pr-medium{background:var(--purple-soft);color:#5a5268;border:1px solid #eadffd}
+.pr-low{background:#f5f3f7;color:#6b7280;border:1px solid #ece7f3}
+.fr-up{background:#ecfdf5;color:#047857;border:1px solid #bbf7d0}
+.fr-review{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.fr-stale{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+.status-pill{background:#f5f3f7;color:#6b7280;border:1px solid #ece7f3}
 .ticket-grid{
   padding:16px 18px 18px;
   display:grid;grid-template-columns:1.2fr .95fr .85fr;gap:14px;
@@ -237,9 +312,10 @@ button:hover{transform:translateY(-1px)}
 .item:before{
   content:"";position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:999px;display:block;
 }
-.item.ok:before,.item.warn:before,.item.bad:before,.item.info:before{
-  background:#ddd1ff;box-shadow:inset 0 0 0 4px var(--purple);
-}
+.item.ok:before{background:#dcfce7;box-shadow:inset 0 0 0 4px #16a34a}
+.item.warn:before{background:#ffedd5;box-shadow:inset 0 0 0 4px #f59e0b}
+.item.bad:before{background:#fee2e2;box-shadow:inset 0 0 0 4px #ef4444}
+.item.info:before{background:#ede9fe;box-shadow:inset 0 0 0 4px var(--purple)}
 .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .kv-card{
   background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;
@@ -703,11 +779,44 @@ function renderSummary(tickets){
   document.getElementById('healthChips').innerHTML = chips.length
     ? chips.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')
     : `<span class="chip">No major hygiene gaps found</span>`;
+
+  const top = [];
+  const noAssigneeUrgent = tickets.filter(t => ['Urgent','High'].includes(t.priority) && t.warnings.some(w => /assignee/i.test(w))).length;
+  if(noAssigneeUrgent) top.push({title:`${noAssigneeUrgent} urgent / high tickets without assignee`, detail:'Assign ownership first so important work does not stall.'});
+  if(missingProjects) top.push({title:`${missingProjects} tickets missing project / epic`, detail:'Project mapping is missing and should be cleaned up before planning.'});
+  if(stale) top.push({title:`${stale} stale tickets need review`, detail:'These items have not been revisited recently and may be outdated.'});
+  if(dependencyGaps) top.push({title:`${dependencyGaps} tickets mention dependencies without links`, detail:'Add the actual blocker ticket so execution is clear.'});
+  if(missingLabels) top.push({title:`${missingLabels} tickets missing BE / FE label`, detail:'Label them so engineering can triage and filter faster.'});
+
+  const topHtml = top.slice(0,3).map(item => `
+    <div class="priority-row">
+      <strong>${escapeHtml(item.title)}</strong>
+      <span>${escapeHtml(item.detail)}</span>
+    </div>
+  `).join('') || `<div class="priority-row"><strong>Nothing major is buried right now</strong><span>The backlog looks reasonably clean and scannable.</span></div>`;
+
+  const results = document.getElementById('results');
+  results.innerHTML = `<section class="top-priorities"><h3>Top Priorities</h3><div class="priority-list">${topHtml}</div></section>`;
 }
 
 function renderTickets(tickets){
   const wrap = document.getElementById('results');
-  wrap.innerHTML = tickets.map((t, idx) => `
+  const cards = tickets.map((t, idx) => {
+    const must = [];
+    const should = [];
+    const okay = [];
+
+    t.warnings.forEach(w => {
+      if(/assignee|Dependency mentioned|Description is missing|Ticket link looks malformed/i.test(w)) must.push(w);
+      else should.push(w);
+    });
+
+    t.flags.forEach(f => {
+      if(f.type === 'ok') okay.push(f.text);
+      else if(f.type === 'warn' && !should.includes(f.text)) should.push(f.text);
+    });
+
+    return `
       <article class="ticket">
         <div class="ticket-top">
           <div class="ticket-title">${idx + 1}. ${escapeHtml(t.title)}</div>
@@ -718,18 +827,28 @@ function renderTickets(tickets){
           </div>
         </div>
         <div class="ticket-grid">
-          <section class="box">
-            <h4>At a glance</h4>
-            <div class="list">
-              ${t.flags.map(f => `<div class="item ${f.type}">${escapeHtml(f.text)}</div>`).join('')}
+          <section class="audit-summary">
+            <div class="audit-group must">
+              <h4>Must Fix</h4>
+              <div class="list">
+                ${must.length ? must.map(x => `<div class="item bad">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No critical cleanup needed.</div>`}
+              </div>
             </div>
-            <div class="raw" style="margin-top:12px">
-              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
-              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
+            <div class="audit-group should">
+              <h4>Should Fix</h4>
+              <div class="list">
+                ${should.length ? should.map(x => `<div class="item warn">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No medium-priority cleanup needed.</div>`}
+              </div>
+            </div>
+            <div class="audit-group ok">
+              <h4>Looks Good</h4>
+              <div class="list">
+                ${okay.length ? okay.slice(0,3).map(x => `<div class="item ok">${escapeHtml(x)}</div>`).join('') : `<div class="item info">Nothing notable yet.</div>`}
+              </div>
             </div>
           </section>
 
-          <section class="box">
+          <section class="box condensed-fixes">
             <h4>Suggested fixes</h4>
             <div class="kv">
               ${t.fixes.map(f => `
@@ -739,19 +858,17 @@ function renderTickets(tickets){
                 </div>
               `).join('')}
             </div>
-          </section>
-
-          <section class="box">
-            <h4>Warnings</h4>
-            <div class="list">
-              ${t.warnings.length
-                ? t.warnings.map(w => `<div class="item bad">${escapeHtml(w)}</div>`).join('')
-                : `<div class="item ok">No major backlog hygiene blockers found.</div>`}
+            <div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('collapsed')">Show raw description</div>
+            <div class="raw collapsed">
+              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
+              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
             </div>
           </section>
         </div>
       </article>
-  `).join('');
+  `}).join('');
+
+  wrap.innerHTML += cards;
 }
 
 function calculateScore(tickets){
