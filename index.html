@@ -12,7 +12,7 @@
 <stop offset="100%" stop-color="%23a855f7"/>
 </linearGradient>
 </defs>
-<rect x="6" y="6" width="52" height="52" rx="14" fill="%230f172a"/>
+<rect x="6" y="6" width="52" height="52" rx="14" fill="%23635b6f"/>
 <path d="M20 42V22h8c8.5 0 13 3.5 13 10s-4.5 10-13 10h-8zm6-5h2.1c5 0 7-1.7 7-5s-2-5-7-5H26v10z" fill="url(%23g)"/>
 <rect x="39" y="18" width="7" height="28" rx="3.5" fill="%23c4b5fd"/>
 </svg>'>
@@ -391,6 +391,7 @@ https://linear.app/company/issue/ABC-123/dashboard-export-crash-for-large-worksp
 
 <div class="footer">AI Backlog Assistant · Portfolio prototype for PM backlog management and ticket readiness</div>
 
+
 <script>
 const DEMO = `Title: Dashboard export crashes for large workspaces
 Description: Export to PDF crashes when workspace has 500+ rows. Finance teams cannot finish reporting at month-end.
@@ -441,11 +442,13 @@ Blocked by:
 Updated: 22 days ago`;
 
 function loadDemo(){
-  document.getElementById('input').value = DEMO;
+  const el = document.getElementById('input');
+  if (el) el.value = DEMO;
 }
 
 function clearAll(){
-  document.getElementById('input').value = '';
+  const el = document.getElementById('input');
+  if (el) el.value = '';
   document.getElementById('resultsWrap').classList.add('hidden');
   document.getElementById('emptyState').classList.add('on');
   document.getElementById('results').innerHTML = '';
@@ -453,11 +456,13 @@ function clearAll(){
 }
 
 function analyzeBacklog(){
-  const raw = document.getElementById('input').value.trim();
+  const inputEl = document.getElementById('input');
+  const raw = inputEl ? inputEl.value.trim() : '';
   if(!raw){
     alert('Paste ticket content or direct ticket links first.');
     return;
   }
+
   const tickets = parseTickets(raw).map(auditTicket);
   tickets.sort((a,b)=> priorityRank(a.priority) - priorityRank(b.priority) || b.warningCount - a.warningCount || b.ageDays - a.ageDays);
 
@@ -471,9 +476,7 @@ function analyzeBacklog(){
 function parseTickets(raw){
   const chunks = raw.split(/\n\s*---+\s*\n/g).map(x=>x.trim()).filter(Boolean);
   return chunks.map((chunk, idx) => {
-    if(isDirectLinkOnly(chunk)){
-      return parseLinkTicket(chunk, idx);
-    }
+    if(isDirectLinkOnly(chunk)) return parseLinkTicket(chunk, idx);
 
     const lines = chunk.split('\n');
     const t = {
@@ -497,8 +500,7 @@ function parseTickets(raw){
       if(!line) continue;
 
       if(isDirectLinkOnly(line) && !t.title && !t.description){
-        const linkTicket = parseLinkTicket(line, idx);
-        Object.assign(t, linkTicket);
+        Object.assign(t, parseLinkTicket(line, idx));
         continue;
       }
 
@@ -538,11 +540,10 @@ function isDirectLinkOnly(text){
 
 function parseLinkTicket(url, idx){
   let title = 'Direct ticket link';
-  let slug = '';
   try{
     const u = new URL(url.trim());
     const parts = u.pathname.split('/').filter(Boolean);
-    slug = parts[parts.length - 1] || '';
+    const slug = parts[parts.length - 1] || '';
     if(slug && !/^[A-Z]+-\d+$/i.test(slug)){
       title = slug.replace(/[-_]+/g,' ').replace(/\b\w/g, m => m.toUpperCase());
     } else if(parts.length >= 2){
@@ -554,7 +555,7 @@ function parseLinkTicket(url, idx){
 
   return {
     source:'link',
-    title: title || ('Linked ticket ' + (idx + 1)),
+    title,
     description:'Only a direct ticket link was provided. Full ticket content is not available in this input, so the audit is limited until title, description, or ticket fields are pasted.',
     priority:'',
     labels:'',
@@ -664,17 +665,7 @@ function auditTicket(t){
     warnings.push('Ticket looks stale.');
   }
 
-  return {
-    ...t,
-    priority,
-    suggestedLabels: mergeLabels(existingLabels, suggestedLabels),
-    projectSuggestion,
-    freshness,
-    ageDays,
-    warnings,
-    warningCount:warnings.length,
-    fixes
-  };
+  return {...t, priority, suggestedLabels: mergeLabels(existingLabels, suggestedLabels), projectSuggestion, freshness, ageDays, warnings, warningCount:warnings.length, fixes, flags};
 }
 
 function renderSummary(tickets){
@@ -716,8 +707,7 @@ function renderSummary(tickets){
 
 function renderTickets(tickets){
   const wrap = document.getElementById('results');
-  wrap.innerHTML = tickets.map((t, idx) => {
-    return `
+  wrap.innerHTML = tickets.map((t, idx) => `
       <article class="ticket">
         <div class="ticket-top">
           <div class="ticket-title">${idx + 1}. ${escapeHtml(t.title)}</div>
@@ -761,8 +751,7 @@ function renderTickets(tickets){
           </section>
         </div>
       </article>
-    `;
-  }).join('');
+  `).join('');
 }
 
 function calculateScore(tickets){
@@ -858,20 +847,11 @@ function looksValidLink(url){
 }
 
 function priorityClass(priority){
-  return {
-    'Urgent':'pr-urgent',
-    'High':'pr-high',
-    'Medium':'pr-medium',
-    'Low':'pr-low'
-  }[priority] || 'pr-low';
+  return {'Urgent':'pr-urgent','High':'pr-high','Medium':'pr-medium','Low':'pr-low'}[priority] || 'pr-low';
 }
 
 function freshnessClass(key){
-  return {
-    'up':'fr-up',
-    'review':'fr-review',
-    'stale':'fr-stale'
-  }[key] || 'fr-stale';
+  return {'up':'fr-up','review':'fr-review','stale':'fr-stale'}[key] || 'fr-stale';
 }
 
 function escapeHtml(value){
@@ -883,5 +863,6 @@ function escapeHtml(value){
     .replace(/'/g,'&#39;');
 }
 </script>
+
 </body>
 </html>
