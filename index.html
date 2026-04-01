@@ -197,7 +197,7 @@ button:hover{transform:translateY(-1px)}
 }
 .results{display:flex;flex-direction:column;gap:16px}
 
-.top-priorities{
+.cleanup-summary{
   background:linear-gradient(135deg,#fffaf3 0%, #ffffff 100%);
   border:1px solid #fed7aa;
   border-radius:22px;
@@ -205,7 +205,7 @@ button:hover{transform:translateY(-1px)}
   box-shadow:var(--shadow-sm);
   margin-bottom:18px;
 }
-.top-priorities h3{
+.cleanup-summary h3{
   font-size:13px;
   font-weight:900;
   text-transform:uppercase;
@@ -213,24 +213,59 @@ button:hover{transform:translateY(-1px)}
   color:#9a3412;
   margin-bottom:12px;
 }
-.priority-list{display:flex;flex-direction:column;gap:10px}
-.priority-row{
+.cleanup-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.cleanup-card{
   background:#fff;
   border:1px solid #fde68a;
   border-radius:16px;
   padding:12px 14px;
 }
-.priority-row strong{
+.cleanup-card strong{
   display:block;
   color:var(--dark);
-  font-size:14px;
-  margin-bottom:4px;
+  font-size:20px;
+  line-height:1;
+  margin-bottom:6px;
 }
-.priority-row span{
+.cleanup-card span{
+  display:block;
   color:#7c2d12;
   font-size:12px;
-  line-height:1.6;
+  line-height:1.5;
 }
+.meta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.meta-chip{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  color:#5a5268;
+}
+.meta-chip.keep{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.meta-chip.archive{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.meta-chip.close{background:#fff1f2;border-color:#fecdd3;color:#be123c}
+.meta-chip.review{background:#ede9fe;border-color:#ddd6fe;color:#6d28d9}
+.meta-chip.aligned{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.meta-chip.unclear{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.meta-chip.outscope{background:#fff1f2;border-color:#fecdd3;color:#be123c}
+.meta-chip.ac-ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.meta-chip.ac-missing{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.top-priorities .priority-row{border-color:#fde68a}
 .ticket-grid{
   padding:16px 18px 18px;
   display:grid;grid-template-columns:1.25fr .95fr;gap:14px;
@@ -269,6 +304,9 @@ button:hover{transform:translateY(-1px)}
   cursor:pointer;
 }
 .raw.collapsed{display:none}
+@media (max-width:980px){
+  .cleanup-grid{grid-template-columns:1fr}
+}
 .ticket{
   background:linear-gradient(180deg,#ffffff 0%,#fcfbfe 100%);
   border:1px solid var(--line);
@@ -667,11 +705,17 @@ function auditTicket(t){
   const labelsMissing = existingLabels.length === 0;
   const descriptionMissing = !t.description || t.description.trim().length < 24;
   const projectMissing = !t.project || !t.project.trim();
+  const acceptanceCriteriaMissing = !hasAcceptanceCriteria(t.description);
+  const strategyAlignment = inferStrategyAlignment(text, ageDays, priority);
+  const disposition = inferDisposition(text, ageDays, priority, strategyAlignment, acceptanceCriteriaMissing, t.source);
 
   fixes.push({k:'Labels', v:(mergeLabels(existingLabels, suggestedLabels).join(', ') || 'Manual review needed')});
   fixes.push({k:'Priority', v:priority});
   fixes.push({k:'Freshness', v:freshness.label});
   fixes.push({k:'Project', v:(projectMissing ? projectSuggestion : t.project)});
+  fixes.push({k:'Decision', v:disposition.label});
+  fixes.push({k:'Strategy', v:strategyAlignment.label});
+  fixes.push({k:'Acceptance Criteria', v:(acceptanceCriteriaMissing ? 'Missing' : 'Present')});
 
   if(descriptionMissing){
     warnings.push('Description is missing or too thin.');
@@ -692,6 +736,13 @@ function auditTicket(t){
     flags.push({type:'warn', text:'Suggested project: ' + projectSuggestion});
   } else {
     flags.push({type:'ok', text:'Project mapped to: ' + t.project});
+  }
+
+  if(acceptanceCriteriaMissing){
+    warnings.push('Acceptance criteria are missing.');
+    flags.push({type:'warn', text:'Top backlog items should define what done looks like before planning or delivery.'});
+  } else {
+    flags.push({type:'ok', text:'Acceptance criteria are present.'});
   }
 
   if(hasDependencyMention && !hasLinkedDependency){
@@ -737,11 +788,59 @@ function auditTicket(t){
     flags.push({type:'ok', text:'Assignee present: ' + t.assignee});
   }
 
-  if(ageDays >= 30){
+  if(ageDays >= 90){
+    warnings.push('Ticket is older than 3 months and needs a keep / archive / close decision.');
+  } else if(ageDays >= 30){
     warnings.push('Ticket looks stale.');
   }
 
-  return {...t, priority, suggestedLabels: mergeLabels(existingLabels, suggestedLabels), projectSuggestion, freshness, ageDays, warnings, warningCount:warnings.length, fixes, flags};
+  if(strategyAlignment.key === 'outscope'){
+    warnings.push('Item looks weakly aligned to current goals and may not belong near the top of the backlog.');
+  }
+
+  return {
+    ...t,
+    priority,
+    suggestedLabels: mergeLabels(existingLabels, suggestedLabels),
+    projectSuggestion,
+    freshness,
+    ageDays,
+    warnings,
+    warningCount:warnings.length,
+    fixes,
+    flags,
+    disposition,
+    strategyAlignment,
+    acceptanceCriteriaMissing
+  };
+}
+
+
+function hasAcceptanceCriteria(description){
+  const text = (description || '').toLowerCase();
+  return /acceptance criteria|done when|definition of done|success criteria|must|should allow|should show|can save|can export|user can/i.test(text);
+}
+
+function inferStrategyAlignment(text, ageDays, priority){
+  if(ageDays >= 180) return {key:'outscope', label:'Likely out of scope'};
+  if(/minor spacing|copy tweak|cosmetic|nice to have|small ui polish|cleanup card spacing/i.test(text) && priority === 'Low'){
+    return {key:'outscope', label:'Likely out of scope'};
+  }
+  if(/dashboard|report|export|onboarding|billing|search|filter|api|performance|timeout|auth|workflow/i.test(text)){
+    return {key:'aligned', label:'Aligned with current goals'};
+  }
+  if(ageDays >= 90) return {key:'unclear', label:'Alignment unclear'};
+  return {key:'unclear', label:'Alignment unclear'};
+}
+
+function inferDisposition(text, ageDays, priority, strategyAlignment, acceptanceCriteriaMissing, source){
+  if(source === 'link') return {key:'review', label:'Needs review'};
+  if(ageDays >= 180 && priority === 'Low') return {key:'close', label:'Close'};
+  if(ageDays >= 90 && strategyAlignment.key !== 'aligned') return {key:'archive', label:'Archive'};
+  if(priority === 'Urgent' || priority === 'High') return {key:'keep', label:'Keep'};
+  if(strategyAlignment.key === 'outscope' && priority === 'Low') return {key:'close', label:'Close'};
+  if(acceptanceCriteriaMissing || strategyAlignment.key === 'unclear') return {key:'review', label:'Needs review'};
+  return {key:'keep', label:'Keep'};
 }
 
 function renderSummary(tickets){
@@ -779,44 +878,11 @@ function renderSummary(tickets){
   document.getElementById('healthChips').innerHTML = chips.length
     ? chips.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')
     : `<span class="chip">No major hygiene gaps found</span>`;
-
-  const top = [];
-  const noAssigneeUrgent = tickets.filter(t => ['Urgent','High'].includes(t.priority) && t.warnings.some(w => /assignee/i.test(w))).length;
-  if(noAssigneeUrgent) top.push({title:`${noAssigneeUrgent} urgent / high tickets without assignee`, detail:'Assign ownership first so important work does not stall.'});
-  if(missingProjects) top.push({title:`${missingProjects} tickets missing project / epic`, detail:'Project mapping is missing and should be cleaned up before planning.'});
-  if(stale) top.push({title:`${stale} stale tickets need review`, detail:'These items have not been revisited recently and may be outdated.'});
-  if(dependencyGaps) top.push({title:`${dependencyGaps} tickets mention dependencies without links`, detail:'Add the actual blocker ticket so execution is clear.'});
-  if(missingLabels) top.push({title:`${missingLabels} tickets missing BE / FE label`, detail:'Label them so engineering can triage and filter faster.'});
-
-  const topHtml = top.slice(0,3).map(item => `
-    <div class="priority-row">
-      <strong>${escapeHtml(item.title)}</strong>
-      <span>${escapeHtml(item.detail)}</span>
-    </div>
-  `).join('') || `<div class="priority-row"><strong>Nothing major is buried right now</strong><span>The backlog looks reasonably clean and scannable.</span></div>`;
-
-  const results = document.getElementById('results');
-  results.innerHTML = `<section class="top-priorities"><h3>Top Priorities</h3><div class="priority-list">${topHtml}</div></section>`;
 }
 
 function renderTickets(tickets){
   const wrap = document.getElementById('results');
-  const cards = tickets.map((t, idx) => {
-    const must = [];
-    const should = [];
-    const okay = [];
-
-    t.warnings.forEach(w => {
-      if(/assignee|Dependency mentioned|Description is missing|Ticket link looks malformed/i.test(w)) must.push(w);
-      else should.push(w);
-    });
-
-    t.flags.forEach(f => {
-      if(f.type === 'ok') okay.push(f.text);
-      else if(f.type === 'warn' && !should.includes(f.text)) should.push(f.text);
-    });
-
-    return `
+  wrap.innerHTML = tickets.map((t, idx) => `
       <article class="ticket">
         <div class="ticket-top">
           <div class="ticket-title">${idx + 1}. ${escapeHtml(t.title)}</div>
@@ -827,28 +893,18 @@ function renderTickets(tickets){
           </div>
         </div>
         <div class="ticket-grid">
-          <section class="audit-summary">
-            <div class="audit-group must">
-              <h4>Must Fix</h4>
-              <div class="list">
-                ${must.length ? must.map(x => `<div class="item bad">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No critical cleanup needed.</div>`}
-              </div>
+          <section class="box">
+            <h4>At a glance</h4>
+            <div class="list">
+              ${t.flags.map(f => `<div class="item ${f.type}">${escapeHtml(f.text)}</div>`).join('')}
             </div>
-            <div class="audit-group should">
-              <h4>Should Fix</h4>
-              <div class="list">
-                ${should.length ? should.map(x => `<div class="item warn">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No medium-priority cleanup needed.</div>`}
-              </div>
-            </div>
-            <div class="audit-group ok">
-              <h4>Looks Good</h4>
-              <div class="list">
-                ${okay.length ? okay.slice(0,3).map(x => `<div class="item ok">${escapeHtml(x)}</div>`).join('') : `<div class="item info">Nothing notable yet.</div>`}
-              </div>
+            <div class="raw" style="margin-top:12px">
+              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
+              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
             </div>
           </section>
 
-          <section class="box condensed-fixes">
+          <section class="box">
             <h4>Suggested fixes</h4>
             <div class="kv">
               ${t.fixes.map(f => `
@@ -858,17 +914,19 @@ function renderTickets(tickets){
                 </div>
               `).join('')}
             </div>
-            <div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('collapsed')">Show raw description</div>
-            <div class="raw collapsed">
-              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
-              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
+          </section>
+
+          <section class="box">
+            <h4>Warnings</h4>
+            <div class="list">
+              ${t.warnings.length
+                ? t.warnings.map(w => `<div class="item bad">${escapeHtml(w)}</div>`).join('')
+                : `<div class="item ok">No major backlog hygiene blockers found.</div>`}
             </div>
           </section>
         </div>
       </article>
-  `}).join('');
-
-  wrap.innerHTML += cards;
+  `).join('');
 }
 
 function calculateScore(tickets){
