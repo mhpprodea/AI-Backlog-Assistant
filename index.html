@@ -306,8 +306,8 @@ button:hover{transform:translateY(-1px)}
 .raw.collapsed{display:none}
 
 .batch-board{
-  background:linear-gradient(135deg,#f8f6ff 0%, #ffffff 100%);
-  border:1px solid #e6def8;
+  background:#ffffff;
+  border:1px solid var(--line);
   border-radius:22px;
   padding:18px;
   box-shadow:var(--shadow-sm);
@@ -327,7 +327,7 @@ button:hover{transform:translateY(-1px)}
   gap:10px;
 }
 .batch-card{
-  background:#fff;
+  background:#faf9fc;
   border:1px solid var(--line);
   border-radius:16px;
   padding:12px 14px;
@@ -352,10 +352,40 @@ button:hover{transform:translateY(-1px)}
   line-height:1.6;
 }
 .batch-list{
-  margin-top:8px;
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.batch-ticket{
+  background:#fff;
+  border:1px solid #e8e2f3;
+  border-radius:12px;
+  padding:9px 10px;
+  font-size:12px;
+  color:var(--dark);
+  line-height:1.45;
+}
+.batch-empty{
+  font-size:12px;
+  color:var(--muted);
+}
+.batch-note{
+  margin-top:10px;
   font-size:11px;
   color:var(--muted);
-  line-height:1.6;
+}
+.batch-copy{
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  padding:8px 10px;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  background:var(--purple-soft);
+  color:var(--purple-dark);
+  border:1px solid #e6def8;
 }
 .ticket-grid{
   padding:16px 18px 18px;
@@ -431,7 +461,9 @@ button:hover{transform:translateY(-1px)}
   color:var(--dark);
 }
 @media (max-width:980px){
+  .priority-list{grid-template-columns:1fr}
   .cleanup-grid{grid-template-columns:1fr}
+  .batch-grid{grid-template-columns:1fr}
 }
 .ticket{
   background:linear-gradient(180deg,#ffffff 0%,#fcfbfe 100%);
@@ -1054,13 +1086,23 @@ function inferDisposition(text, ageDays, priority, strategyAlignment, acceptance
 
 function collectBatchGroups(tickets){
   return {
-    be: tickets.filter(t => t.suggestedLabels && t.suggestedLabels.includes('BE')),
-    fe: tickets.filter(t => t.suggestedLabels && t.suggestedLabels.includes('FE')),
-    project: tickets.filter(t => !t.project || !t.project.trim()),
-    archive: tickets.filter(t => t.disposition && t.disposition.key === 'archive'),
-    close: tickets.filter(t => t.disposition && t.disposition.key === 'close'),
-    review: tickets.filter(t => t.disposition && t.disposition.key === 'review')
+    be: tickets.filter(t => t.suggestedLabels && t.suggestedLabels.includes('BE')).map(t => t.title),
+    fe: tickets.filter(t => t.suggestedLabels && t.suggestedLabels.includes('FE')).map(t => t.title),
+    project: tickets.filter(t => !t.project || !t.project.trim()).map(t => t.title),
+    archive: tickets.filter(t => t.disposition && t.disposition.key === 'archive').map(t => t.title),
+    close: tickets.filter(t => t.disposition && t.disposition.key === 'close').map(t => t.title),
+    review: tickets.filter(t => t.disposition && t.disposition.key === 'review').map(t => t.title)
   };
+}
+
+
+function copyBatchList(items, label){
+  const text = items.length ? items.join('\n') : 'No tickets in this batch.';
+  navigator.clipboard.writeText(text).then(() => {
+    alert(label + ' list copied.');
+  }).catch(() => {
+    alert('Could not copy automatically. Please try again.');
+  });
 }
 
 function renderSummary(tickets){
@@ -1107,50 +1149,49 @@ function renderSummary(tickets){
 
   const top = [];
   const noAssigneeUrgent = tickets.filter(t => ['Urgent','High'].includes(t.priority) && t.warnings.some(w => /assignee/i.test(w))).length;
-  if(noAssigneeUrgent) top.push({title:`${noAssigneeUrgent} urgent / high tickets without assignee`, detail:'Assign ownership first so important work does not stall.'});
-  if(missingProjects) top.push({title:`${missingProjects} tickets missing project / epic`, detail:'Project mapping is missing and should be cleaned up before planning.'});
-  if(stale) top.push({title:`${stale} stale tickets need review`, detail:'These items have not been revisited recently and may be outdated.'});
-  if(acMissing) top.push({title:`${acMissing} tickets missing acceptance criteria`, detail:'Define what done looks like before those items rise in priority.'});
-  if(outOfScope) top.push({title:`${outOfScope} items look weakly aligned with current goals`, detail:'Good candidates to archive, close, or deprioritize.'});
+  if(noAssigneeUrgent) top.push(`${noAssigneeUrgent} urgent / high tickets without assignee`);
+  if(missingProjects) top.push(`${missingProjects} tickets missing project / epic`);
+  if(stale) top.push(`${stale} stale tickets need review`);
+  if(acMissing) top.push(`${acMissing} tickets missing acceptance criteria`);
+  if(outOfScope) top.push(`${outOfScope} items weakly aligned with current goals`);
 
   const topHtml = top.slice(0,3).map(item => `
     <div class="priority-row">
-      <strong>${escapeHtml(item.title)}</strong>
-      <span>${escapeHtml(item.detail)}</span>
+      <strong>${escapeHtml(item)}</strong>
     </div>
-  `).join('') || `<div class="priority-row"><strong>Nothing major is buried right now</strong><span>The backlog looks reasonably clean and scannable.</span></div>`;
+  `).join('') || `<div class="priority-row"><strong>No major cleanup blockers surfaced</strong></div>`;
 
   const cleanupHtml = `
     <section class="cleanup-summary">
       <h3>Cleanup Decisions</h3>
       <div class="cleanup-grid">
-        <div class="cleanup-card"><strong>${archiveCount}</strong><span>Archive — stale items that no longer deserve active space.</span></div>
-        <div class="cleanup-card"><strong>${closeCount}</strong><span>Close — low-value items that should likely be removed.</span></div>
-        <div class="cleanup-card"><strong>${reviewCount}</strong><span>Needs review — items that still need strategy or scope clarification.</span></div>
+        <div class="cleanup-card"><strong>${archiveCount}</strong><span>Archive</span></div>
+        <div class="cleanup-card"><strong>${closeCount}</strong><span>Close</span></div>
+        <div class="cleanup-card"><strong>${reviewCount}</strong><span>Needs review</span></div>
       </div>
     </section>`;
 
   const batch = collectBatchGroups(tickets);
+  const makeBatchCard = (title, list, desc, label) => `
+    <div class="batch-card">
+      <strong><span class="count">${list.length}</span>${title}</strong>
+      <div class="desc">${desc}</div>
+      <div class="batch-list">
+        ${list.length ? list.map(t => `<div class="batch-ticket">${escapeHtml(t)}</div>`).join('') : `<div class="batch-empty">No tickets in this group</div>`}
+      </div>
+      ${list.length ? `<button class="batch-copy" onclick='copyBatchList(${JSON.stringify(list)}, ${JSON.stringify(label)})'>Copy List</button>` : ``}
+    </div>
+  `;
+
   const batchHtml = `
     <section class="batch-board">
       <h3>Batch Cleanup Opportunities</h3>
       <div class="batch-grid">
-        <div class="batch-card">
-          <strong><span class="count">${batch.be.length}</span> BE labels</strong>
-          <div class="desc">Tickets that can likely receive a BE label together.</div>
-          <div class="batch-list">${batch.be.slice(0,4).map(t => escapeHtml(t.title)).join('<br>') || 'No obvious batch right now'}</div>
-        </div>
-        <div class="batch-card">
-          <strong><span class="count">${batch.fe.length}</span> FE labels</strong>
-          <div class="desc">Tickets that can likely receive an FE label together.</div>
-          <div class="batch-list">${batch.fe.slice(0,4).map(t => escapeHtml(t.title)).join('<br>') || 'No obvious batch right now'}</div>
-        </div>
-        <div class="batch-card">
-          <strong><span class="count">${batch.project.length}</span> Missing project</strong>
-          <div class="desc">Group these together and assign project / epic in one pass.</div>
-          <div class="batch-list">${batch.project.slice(0,4).map(t => escapeHtml(t.title)).join('<br>') || 'No obvious batch right now'}</div>
-        </div>
+        ${makeBatchCard('Need BE label', batch.be, 'Assign BE to these in one pass.', 'BE batch')}
+        ${makeBatchCard('Need FE label', batch.fe, 'Assign FE to these in one pass.', 'FE batch')}
+        ${makeBatchCard('Missing project / epic', batch.project, 'Assign project or epic together.', 'Project batch')}
       </div>
+      <div class="batch-note">This section groups similar cleanup tasks so you can handle them together instead of ticket by ticket.</div>
     </section>`;
 
   const results = document.getElementById('results');
