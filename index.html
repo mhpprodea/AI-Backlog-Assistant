@@ -978,7 +978,26 @@ function renderSummary(tickets){
 
 function renderTickets(tickets){
   const wrap = document.getElementById('results');
-  wrap.innerHTML = tickets.map((t, idx) => `
+  const cards = tickets.map((t, idx) => {
+    const must = [];
+    const should = [];
+    const okay = [];
+
+    t.warnings.forEach(w => {
+      if(/assignee|Dependency mentioned|Description is missing|Ticket link looks malformed|older than 3 months/i.test(w)) must.push(w);
+      else should.push(w);
+    });
+
+    t.flags.forEach(f => {
+      if(f.type === 'ok') okay.push(f.text);
+      else if(f.type === 'warn' && !should.includes(f.text)) should.push(f.text);
+    });
+
+    const cleanText = buildCleanTicket(t);
+    const encoded = encodeURIComponent(cleanText);
+    const cleanId = 'clean-ticket-' + idx;
+
+    return `
       <article class="ticket">
         <div class="ticket-top">
           <div class="ticket-title">${idx + 1}. ${escapeHtml(t.title)}</div>
@@ -987,20 +1006,35 @@ function renderTickets(tickets){
             <span class="pill ${freshnessClass(t.freshness.key)}">${escapeHtml(t.freshness.label)}</span>
             <span class="pill status-pill">${escapeHtml(t.status || 'Backlog')}</span>
           </div>
+          <div class="meta-row">
+            <span class="meta-chip ${t.disposition.key}">${escapeHtml(t.disposition.label)}</span>
+            <span class="meta-chip ${t.strategyAlignment.key === 'aligned' ? 'aligned' : t.strategyAlignment.key === 'outscope' ? 'outscope' : 'unclear'}">${escapeHtml(t.strategyAlignment.label)}</span>
+            <span class="meta-chip ${t.acceptanceCriteriaMissing ? 'ac-missing' : 'ac-ok'}">${t.acceptanceCriteriaMissing ? 'AC missing' : 'AC present'}</span>
+          </div>
         </div>
         <div class="ticket-grid">
-          <section class="box">
-            <h4>At a glance</h4>
-            <div class="list">
-              ${t.flags.map(f => `<div class="item ${f.type}">${escapeHtml(f.text)}</div>`).join('')}
+          <section class="audit-summary">
+            <div class="audit-group must">
+              <h4>Must Fix</h4>
+              <div class="list">
+                ${must.length ? must.map(x => `<div class="item bad">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No critical cleanup needed.</div>`}
+              </div>
             </div>
-            <div class="raw" style="margin-top:12px">
-              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
-              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
+            <div class="audit-group should">
+              <h4>Should Fix</h4>
+              <div class="list">
+                ${should.length ? should.map(x => `<div class="item warn">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No medium-priority cleanup needed.</div>`}
+              </div>
+            </div>
+            <div class="audit-group ok">
+              <h4>Looks Good</h4>
+              <div class="list">
+                ${okay.length ? okay.slice(0,3).map(x => `<div class="item ok">${escapeHtml(x)}</div>`).join('') : `<div class="item info">Nothing notable yet.</div>`}
+              </div>
             </div>
           </section>
 
-          <section class="box">
+          <section class="box condensed-fixes">
             <h4>Suggested fixes</h4>
             <div class="kv">
               ${t.fixes.map(f => `
@@ -1010,19 +1044,25 @@ function renderTickets(tickets){
                 </div>
               `).join('')}
             </div>
-          </section>
 
-          <section class="box">
-            <h4>Warnings</h4>
-            <div class="list">
-              ${t.warnings.length
-                ? t.warnings.map(w => `<div class="item bad">${escapeHtml(w)}</div>`).join('')
-                : `<div class="item ok">No major backlog hygiene blockers found.</div>`}
+            <div class="action-row">
+              <button class="mini-btn" onclick="toggleCleanTicket('${cleanId}','${encoded}')">Generate Cleaned Ticket</button>
+              <button class="mini-btn" onclick="copyCleanTicket('${encoded}')">Copy Cleaned Ticket</button>
+            </div>
+
+            <div id="${cleanId}" class="clean-ticket hidden"></div>
+
+            <div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('collapsed')">Show raw description</div>
+            <div class="raw collapsed">
+              <strong>Raw description:</strong> ${escapeHtml(t.description || 'No description provided.')}
+              ${t.link ? `<br><strong>Link:</strong> ${escapeHtml(t.link)}` : ``}
             </div>
           </section>
         </div>
       </article>
-  `).join('');
+  `}).join('');
+
+  wrap.innerHTML += cards;
 }
 
 function calculateScore(tickets){
