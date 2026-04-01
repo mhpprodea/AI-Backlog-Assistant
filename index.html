@@ -190,10 +190,24 @@ button:hover{transform:translateY(-1px)}
   background:linear-gradient(90deg,var(--dark),var(--purple));
   border-radius:999px;
 }
+.health-scale{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:2px;
+}
+.health-scale span{
+  font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  border-radius:999px;padding:4px 9px;
+}
+.scale-bad{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.scale-mid{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.scale-good{background:#ecfdf5;color:#047857;border:1px solid #bbf7d0}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .chip{
   background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 10px;
   font-size:11px;color:#5a5268;font-weight:800;
+}
+.chip.freshness-key{
+  background:var(--surface-soft);color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.04em;
+  border-style:dashed;
 }
 .results{display:flex;flex-direction:column;gap:16px}
 
@@ -437,7 +451,36 @@ button:hover{transform:translateY(-1px)}
   color:var(--purple-dark);
   border:1px solid #e6def8;
 }
+.mini-btn.mini-btn-primary{
+  background:linear-gradient(135deg,var(--dark),var(--purple));
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  font-size:12px;
+  box-shadow:0 6px 14px rgba(109,40,217,.18);
+}
 .mini-btn:hover{transform:translateY(-1px)}
+.clean-cta{
+  margin-top:14px;
+  background:linear-gradient(135deg,#f4efff,#fbf9ff);
+  border:1px solid #e0d6f7;
+  border-radius:14px;
+  padding:13px 14px;
+}
+.clean-cta-text{
+  margin-bottom:10px;
+}
+.clean-cta-text strong{
+  display:block;
+  font-size:13px;
+  color:var(--dark);
+  margin-bottom:4px;
+}
+.clean-cta-text span{
+  font-size:11px;
+  color:#6b6278;
+  line-height:1.55;
+}
 .clean-ticket{
   margin-top:12px;
   background:#ffffff;
@@ -512,6 +555,33 @@ button:hover{transform:translateY(-1px)}
 .item.warn:before{background:#ffedd5;box-shadow:inset 0 0 0 4px #f59e0b}
 .item.bad:before{background:#fee2e2;box-shadow:inset 0 0 0 4px #ef4444}
 .item.info:before{background:#ede9fe;box-shadow:inset 0 0 0 4px var(--purple)}
+.warning-hint{
+  margin-top:5px;
+  font-size:11px;
+  color:#7b7487;
+  font-style:italic;
+  line-height:1.5;
+  font-weight:400;
+}
+.dismiss-btn{
+  float:right;
+  margin-left:8px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:10px;
+  color:#b0a8ba;
+  padding:0 2px;
+  border-radius:4px;
+  line-height:1;
+  font-weight:900;
+  transform:none;
+}
+.dismiss-btn:hover{
+  color:#7b7487;
+  background:#f0ecf8;
+  transform:none;
+}
 .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .kv-card{
   background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;
@@ -651,6 +721,11 @@ https://linear.app/company/issue/ABC-123/dashboard-export-crash-for-large-worksp
             </div>
           </div>
           <div class="track"><div class="fill" id="healthFill"></div></div>
+          <div class="health-scale">
+            <span class="scale-bad">Below 60% — needs a grooming sprint</span>
+            <span class="scale-mid">60–79% — workable, gaps visible</span>
+            <span class="scale-good">80%+ — mostly healthy</span>
+          </div>
           <div class="chips" id="healthChips"></div>
         </div>
 
@@ -661,12 +736,16 @@ https://linear.app/company/issue/ABC-123/dashboard-export-crash-for-large-worksp
   </div>
 </main>
 
-<div class="footer">AI Backlog Assistant · Portfolio prototype for PM backlog management and ticket readiness</div>
+<div class="footer">AI Backlog Assistant</div>
 
 
 <script>
-const DEMO = `Title: Dashboard export crashes for large workspaces
-Description: Export to PDF crashes when workspace has 500+ rows. Finance teams cannot finish reporting at month-end.
+const DEMO = `fix the export thing
+Updated: 4 months ago
+
+---
+Title: Dashboard export crashes for large workspaces
+Description: Export to PDF crashes when workspace has 500+ rows. Finance teams cannot finish month-end reporting. Blocked by the API export service refactor that was supposed to ship last sprint.
 Priority:
 Labels:
 Project:
@@ -677,22 +756,22 @@ Blocked by: API export service refactor
 Updated: 48 days ago
 
 ---
-Title: Improve onboarding checklist completion state
-Description: Checklist does not clearly show completed steps. UI and state management both look off.
+Title: Onboarding checklist doesn't show completed steps correctly
+Description: Checklist does not clearly show completed steps. UI and state management both look off. See Slack thread for screenshots.
 Priority: Low
-Labels:
+Labels: FE
 Project: Onboarding Improvements
 Status: Todo
-Assignee:
-Design: https://www.figma.com/file/example-onboarding
+Assignee: maria@company.com
+Design: figma.com/file/example-onboarding
 Updated: 12 days ago
 
 ---
-https://linear.app/company/issue/ABC-123/dashboard-export-crash-for-large-workspaces
+https://linear.app/company/issue/ENG-487/billing-invoice-amounts-rounding-incorrectly
 
 ---
 Title: Add filter presets to analytics dashboard
-Description: Customers want to save common dashboard filter combinations and reuse them across sessions.
+Description: Customers want to save common dashboard filter combinations and reuse them across sessions. Came up in 3 NPS responses last quarter.
 Priority: Medium
 Labels:
 Project:
@@ -703,7 +782,7 @@ Updated: 3 days ago
 
 ---
 Title: API timeout on scheduled report generation
-Description: Scheduled reports fail after 30 seconds for some enterprise accounts. Backend retries are inconsistent.
+Description: Scheduled reports fail after 30 seconds for some enterprise accounts. Backend retries are inconsistent. This has been in the backlog since Q1 and no one has picked it up.
 Priority: High
 Labels:
 Project: Reporting Reliability
@@ -711,7 +790,18 @@ Status: In Progress
 Assignee:
 Design:
 Blocked by:
-Updated: 22 days ago`;
+Updated: 22 days ago
+
+---
+Title: Update button color on settings page
+Description: Minor spacing and button color looks off on the settings page. Nice to have.
+Priority: Low
+Labels: FE
+Project:
+Status: Backlog
+Assignee:
+Design:
+Updated: 5 months ago`;
 
 function loadDemo(){
   const el = document.getElementById('input');
@@ -984,11 +1074,10 @@ function inferStrategyAlignment(text, ageDays, priority){
   if(/minor spacing|copy tweak|cosmetic|nice to have|small ui polish|cleanup card spacing/i.test(text) && priority === 'Low'){
     return {key:'outscope', label:'Likely out of scope'};
   }
-  if(/dashboard|report|export|onboarding|billing|search|filter|api|performance|timeout|auth|workflow/i.test(text)){
-    return {key:'aligned', label:'Aligned with current goals'};
+  if(ageDays <= 60 && /dashboard|report|export|onboarding|billing|search|filter|api|performance|timeout|auth|workflow/i.test(text)){
+    return {key:'aligned', label:'Active area — verify fit'};
   }
-  if(ageDays >= 90) return {key:'unclear', label:'Alignment unclear'};
-  return {key:'unclear', label:'Alignment unclear'};
+  return {key:'unclear', label:'Review alignment'};
 }
 
 function inferDisposition(text, ageDays, priority, strategyAlignment, acceptanceCriteriaMissing, source){
@@ -1002,7 +1091,26 @@ function inferDisposition(text, ageDays, priority, strategyAlignment, acceptance
 }
 
 
-function buildCleanTicket(t){
+function dismissItem(id){
+  const el = document.getElementById(id);
+  if(el){ el.style.opacity='0.4'; el.style.textDecoration='line-through'; el.style.pointerEvents='none'; }
+}
+
+function getWarningHint(w){
+  if(/Description is missing/i.test(w)) return 'Try: what problem does this solve, for whom, and what does the fix look like?';
+  if(/BE \/ FE label/i.test(w)) return 'Check title and description for API / backend / UI keywords, then assign accordingly.';
+  if(/project \/ epic/i.test(w)) return 'Assign to an existing epic, or flag it for project mapping in your next grooming session.';
+  if(/Acceptance criteria/i.test(w)) return 'Add at least one "user can…" or "system should…" line so the team knows what done looks like.';
+  if(/Dependency mentioned/i.test(w)) return 'Link the blocking ticket in the "Blocked by" field so it shows up in planning views.';
+  if(/design link/i.test(w)) return 'Add a Figma link, even a draft — avoids back-and-forth during development.';
+  if(/assignee/i.test(w)) return 'Assign before sprint planning starts — unowned active work is a risk.';
+  if(/older than 3 months/i.test(w)) return 'Decide: still relevant → keep and refresh; no longer needed → archive or close.';
+  if(/stale/i.test(w)) return 'Review in the next grooming — confirm it still reflects the current problem and priority.';
+  if(/weakly aligned/i.test(w)) return 'Reassess against current sprint goals — if it doesn\'t fit the next 2 quarters, archive it.';
+  if(/full ticket content is missing/i.test(w)) return 'Paste the full ticket fields to get a complete audit with label and AC suggestions.';
+  if(/link looks malformed/i.test(w)) return 'Check the URL — it may be truncated or missing the protocol (https://).';
+  return null;
+}
   const title = t.title || 'Untitled ticket';
   const labels = (t.suggestedLabels && t.suggestedLabels.length) ? t.suggestedLabels.join(', ') : '';
   const project = t.project && t.project.trim() ? t.project : t.projectSuggestion;
@@ -1067,11 +1175,10 @@ function inferStrategyAlignment(text, ageDays, priority){
   if(/minor spacing|copy tweak|cosmetic|nice to have|small ui polish|cleanup card spacing/i.test(text) && priority === 'Low'){
     return {key:'outscope', label:'Likely out of scope'};
   }
-  if(/dashboard|report|export|onboarding|billing|search|filter|api|performance|timeout|auth|workflow/i.test(text)){
-    return {key:'aligned', label:'Aligned with current goals'};
+  if(ageDays <= 60 && /dashboard|report|export|onboarding|billing|search|filter|api|performance|timeout|auth|workflow/i.test(text)){
+    return {key:'aligned', label:'Active area — verify fit'};
   }
-  if(ageDays >= 90) return {key:'unclear', label:'Alignment unclear'};
-  return {key:'unclear', label:'Alignment unclear'};
+  return {key:'unclear', label:'Review alignment'};
 }
 
 function inferDisposition(text, ageDays, priority, strategyAlignment, acceptanceCriteriaMissing, source){
@@ -1138,8 +1245,8 @@ function renderSummary(tickets){
   if(linkOnly) chips.push(`${linkOnly} link-only tickets`);
 
   document.getElementById('healthChips').innerHTML = chips.length
-    ? chips.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')
-    : `<span class="chip">No major hygiene gaps found</span>`;
+    ? chips.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('') + `<span class="chip freshness-key">Freshness: ≤7d = current · 8–30d = review · 31d+ = stale</span>`
+    : `<span class="chip">No major hygiene gaps found</span><span class="chip freshness-key">Freshness: ≤7d = current · 8–30d = review · 31d+ = stale</span>`;
 
   const closeCount = tickets.filter(t => t.disposition.key === 'close').length;
   const archiveCount = tickets.filter(t => t.disposition.key === 'archive').length;
@@ -1233,13 +1340,21 @@ function renderTickets(tickets){
             <div class="audit-group must">
               <h4>Must Fix</h4>
               <div class="list">
-                ${must.length ? must.map(x => `<div class="item bad">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No critical cleanup needed.</div>`}
+                ${must.length ? must.map((x, wi) => {
+                  const hint = getWarningHint(x);
+                  const dimId = `dim-${idx}-m-${wi}`;
+                  return `<div class="item bad" id="${dimId}">${escapeHtml(x)}<button class="dismiss-btn" onclick="dismissItem('${dimId}')" title="Dismiss">✕</button>${hint ? `<div class="warning-hint">${escapeHtml(hint)}</div>` : ''}</div>`;
+                }).join('') : `<div class="item ok">No critical cleanup needed.</div>`}
               </div>
             </div>
             <div class="audit-group should">
               <h4>Should Fix</h4>
               <div class="list">
-                ${should.length ? should.map(x => `<div class="item warn">${escapeHtml(x)}</div>`).join('') : `<div class="item ok">No medium-priority cleanup needed.</div>`}
+                ${should.length ? should.map((x, wi) => {
+                  const hint = getWarningHint(x);
+                  const dimId = `dim-${idx}-s-${wi}`;
+                  return `<div class="item warn" id="${dimId}">${escapeHtml(x)}<button class="dismiss-btn" onclick="dismissItem('${dimId}')" title="Dismiss">✕</button>${hint ? `<div class="warning-hint">${escapeHtml(hint)}</div>` : ''}</div>`;
+                }).join('') : `<div class="item ok">No medium-priority cleanup needed.</div>`}
               </div>
             </div>
           </section>
@@ -1255,9 +1370,15 @@ function renderTickets(tickets){
               `).join('')}
             </div>
 
-            <div class="action-row">
-              <button class="mini-btn" onclick="toggleCleanTicket('${cleanId}','${encoded}')">Generate Cleaned Ticket</button>
-              <button class="mini-btn" onclick="copyCleanTicket('${encoded}')">Copy Cleaned Ticket</button>
+            <div class="clean-cta">
+              <div class="clean-cta-text">
+                <strong>Get the grooming-ready version</strong>
+                <span>Fills in missing fields, adds AC structure, and formats the ticket so it's ready to paste into Jira or Linear.</span>
+              </div>
+              <div class="action-row">
+                <button class="mini-btn mini-btn-primary" onclick="toggleCleanTicket('${cleanId}','${encoded}')">Show cleaned ticket ↓</button>
+                <button class="mini-btn" onclick="copyCleanTicket('${encoded}')">Copy to clipboard</button>
+              </div>
             </div>
 
             <div id="${cleanId}" class="clean-ticket hidden"></div>
