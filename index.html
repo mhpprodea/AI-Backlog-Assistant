@@ -304,6 +304,47 @@ button:hover{transform:translateY(-1px)}
   cursor:pointer;
 }
 .raw.collapsed{display:none}
+
+.action-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.mini-btn{
+  border:none;
+  border-radius:10px;
+  padding:9px 12px;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  background:var(--purple-soft);
+  color:var(--purple-dark);
+  border:1px solid #e6def8;
+}
+.mini-btn:hover{transform:translateY(-1px)}
+.clean-ticket{
+  margin-top:12px;
+  background:#ffffff;
+  border:1px solid #e6def8;
+  border-radius:14px;
+  padding:12px;
+}
+.clean-ticket h5{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.clean-ticket pre{
+  white-space:pre-wrap;
+  word-break:break-word;
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:12px;
+  line-height:1.65;
+  color:var(--dark);
+}
 @media (max-width:980px){
   .cleanup-grid{grid-template-columns:1fr}
 }
@@ -841,6 +882,61 @@ function inferDisposition(text, ageDays, priority, strategyAlignment, acceptance
   if(strategyAlignment.key === 'outscope' && priority === 'Low') return {key:'close', label:'Close'};
   if(acceptanceCriteriaMissing || strategyAlignment.key === 'unclear') return {key:'review', label:'Needs review'};
   return {key:'keep', label:'Keep'};
+}
+
+
+function buildCleanTicket(t){
+  const title = t.title || 'Untitled ticket';
+  const labels = (t.suggestedLabels && t.suggestedLabels.length) ? t.suggestedLabels.join(', ') : '';
+  const project = t.project && t.project.trim() ? t.project : t.projectSuggestion;
+  const priority = t.priority || 'Medium';
+  const status = t.status || 'Backlog';
+  const desc = t.description && t.description.trim().length
+    ? t.description.trim()
+    : 'Add a clearer problem statement, user impact, and expected behavior.';
+  const ac = t.acceptanceCriteriaMissing
+    ? [
+        'Define the expected outcome clearly.',
+        'Document what should happen when the ticket is complete.',
+        'List edge cases or constraints if relevant.'
+      ]
+    : [
+        'Existing acceptance criteria detected — keep and refine if needed.'
+      ];
+
+  let out = '';
+  out += 'Title: ' + title + '\n';
+  out += 'Priority: ' + priority + '\n';
+  out += 'Labels: ' + labels + '\n';
+  out += 'Project: ' + project + '\n';
+  out += 'Status: ' + status + '\n';
+  out += 'Assignee: ' + (t.assignee && t.assignee.trim() ? t.assignee : '') + '\n';
+  out += 'Design: ' + (t.design || '') + '\n';
+  out += 'Blocked by: ' + (t.blockedBy || '') + '\n';
+  out += '\nDescription:\n' + desc + '\n';
+  out += '\nAcceptance Criteria:\n- ' + ac.join('\n- ');
+  return out.trim();
+}
+
+function toggleCleanTicket(id, encoded){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(el.classList.contains('hidden')){
+    const decoded = decodeURIComponent(encoded);
+    el.innerHTML = '<h5>Cleaned Ticket</h5><pre>' + escapeHtml(decoded) + '</pre>';
+    el.classList.remove('hidden');
+  } else {
+    el.classList.add('hidden');
+  }
+}
+
+function copyCleanTicket(encoded){
+  const decoded = decodeURIComponent(encoded);
+  navigator.clipboard.writeText(decoded).then(() => {
+    alert('Cleaned ticket copied.');
+  }).catch(() => {
+    alert('Could not copy automatically. Please try again.');
+  });
 }
 
 function renderSummary(tickets){
